@@ -1,6 +1,6 @@
-'''This program will create a text file containing a table of 
-   plain-text passwords as well as their hashed counterparts.
-   The hashing algorithm used is that of NT Lan Manager (NTLM).
+'''This program wil perform a dictionary attack on a set of
+   passwords through the use of a text file containing a list
+   of plain-text passwords.
    
    The program is designed designed to parse list files containing collections of plain-text passwords.
    Passwords that are contained inside of the list file should be new-line delimited (\n).
@@ -24,49 +24,43 @@
    Arg2: <outputDirectory>
 '''
 
-import hashlib
+import crypt
 import os
 import sys
-import datetime
 
-print("Beginning NTLM Hashing Program...")
+print("Beginning Dictionary Attack Program...")
 
 #The first command-line argument is always the name of the script that is being called
 if len(sys.argv) is not 3:
     print("Invalid Number of Command-Line Arguments Were Specified: %d" % (len(sys.argv) - 1))
     print("\nExpected Command-Line Arguments:")
-    print("Argv 1: <inputFile>")
-    print("Argv 2: <outputDirectory>")
+    print("Argv 1: <shadowFile>")
+    print("Argv 2: <dictionaryFile>")
     sys.exit("\nTerminating Program.")
 
-inputFile = sys.argv[1]
-outputDirectory = sys.argv[2]
-timeStamp = datetime.datetime.now()
+shadowFile = sys.argv[1]
+dictionaryFile = sys.argv[2]
 
-outputFile = outputDirectory + "/%d%02d%02d%02d%02d%02d" % \
-    (timeStamp.year, timeStamp.month, timeStamp.day, \
-    timeStamp.hour, timeStamp.minute, timeStamp.second)
+#Validate shadow file
+if not os.path.exists(shadowFile):
+    sys.exit("Shadow File Does Not Exist Argv 1: " + shadowFile)
 
-#Validate input file
-if not os.path.exists(inputFile):
-    sys.exit("Input File Was Not Specified Argv 1: " + inputFile)
+#Validate dictionary file
+if not os.path.exists(dictionaryFile):
+    sys.exit("Dictionary File Does Not Exist Argv 2: " + dictionaryFile)
 
-#Validate output directory
-if not os.path.exists(outputDirectory):
-    os.makedirs(outputDirectory)
-
-print("Parsing Input File: " + inputFile)
+print("Parsing Shadow File: " + shadowFile)
 
 plainTextPasswordList = []
-ntlmPasswordList = []
+crackedPasswordList = []
 
-#Open new context and open wordList File
-with open(inputFile, 'r') as file:
+#Open new context and open shadow file
+with open(shadowFile, 'r') as file:
     for line in file:
         #Ignore any lines that are comments
         if not line.startswith('#'):
-            #Extract plain text password
-            plainTextPassword = line.splitlines()[0]
+            #Extract password contents
+            xplainTextPassword = line.splitlines()[0]
             plainTextPasswordList.append(plainTextPassword)
 
             #Create NTLM password
