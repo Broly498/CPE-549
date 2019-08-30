@@ -71,6 +71,7 @@ with open(shadowFile, 'r') as file:
             #Extract password contents
             shadowEntry = line.splitlines()[0].split(':')
             shadowInformation = shadowEntry[1].split('$')
+            shadowUser = shadowEntry[0]
             shadowHash = shadowInformation[3]
             shadowSalt = '$' + shadowInformation[1] + '$' + shadowInformation[2] + '$'
 
@@ -87,8 +88,8 @@ with open(shadowFile, 'r') as file:
                     break
 
             if matchFound:
-                print(item )
+                print("Match found for userid [" + shadowUser + "]. Password = [" + item + "]")
             else:
-                print("No match found")
+                print("No match was found for userid [" + shadowUser + "].")
 
 print("Dictionary Attack Program Concluded...")
