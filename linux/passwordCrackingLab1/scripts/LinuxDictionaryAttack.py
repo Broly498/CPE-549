@@ -24,7 +24,7 @@
    Arg2: <outputDirectory>
 '''
 
-import crypt
+#import crypt
 import os
 import sys
 
@@ -49,29 +49,26 @@ if not os.path.exists(shadowFile):
 if not os.path.exists(dictionaryFile):
     sys.exit("Dictionary File Does Not Exist Argv 2: " + dictionaryFile)
 
-print("Parsing Shadow File: " + shadowFile)
+print("Parsing Dictionary File: " + dictionaryFile)
 
-plainTextPasswordList = []
-crackedPasswordList = []
+dictionaryEntries = []
 
-#Open new context and open shadow file
+#Open new context and open dictionary file
+with open(dictionaryFile, 'r') as file:
+    for line in file:
+        #Ignore any lines that are comments
+        if not line.startswith('#'):
+            #Extract dictionary contents
+            dictionaryEntry = line.splitlines()[0]
+            dictionaryEntries.append(dictionaryEntry)
+
+#Open new context and shadow file
 with open(shadowFile, 'r') as file:
     for line in file:
         #Ignore any lines that are comments
         if not line.startswith('#'):
             #Extract password contents
-            xplainTextPassword = line.splitlines()[0]
-            plainTextPasswordList.append(plainTextPassword)
+            shadowEntry = line.splitlines()[0].split(':')
+            hashInformation = shadowEntry[1].split('$')
 
-            #Create NTLM password
-            ntlmPassword = hashlib.new('md4', plainTextPassword.encode('utf_16_LE')).hexdigest()
-            ntlmPasswordList.append(ntlmPassword)
-
-#Open new context and create hashtable file
-with open(outputDirectory + '/hashTable.lst', 'w+') as file:
-    for i in range(len(ntlmPasswordList)):
-        file.write("%s : %s\n" % (plainTextPasswordList[i], ntlmPasswordList[i]))
-
-print("Output Hash Table File Was Created: " + outputFile)
-
-print("NTLM Hashing Program Concluded...")
+print("Dictionary Attack Program Concluded...")

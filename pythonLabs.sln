@@ -3,14 +3,20 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29201.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "ntlmHashing", "ntlmHashing\ntlmHashing.pyproj", "{F1F3C1D5-5900-42D4-97A5-70247B56DDE1}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "ntlmHashing", "windows\ntlmHashing\ntlmHashing.pyproj", "{F1F3C1D5-5900-42D4-97A5-70247B56DDE1}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "LinuxDictionaryAttack", "linux\passwordCrackingLab1\LinuxDictionaryAttack.pyproj", "{47D203EA-E85F-4EC0-AB10-3162BA7905FF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{F1F3C1D5-5900-42D4-97A5-70247B56DDE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1F3C1D5-5900-42D4-97A5-70247B56DDE1}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{47D203EA-E85F-4EC0-AB10-3162BA7905FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47D203EA-E85F-4EC0-AB10-3162BA7905FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

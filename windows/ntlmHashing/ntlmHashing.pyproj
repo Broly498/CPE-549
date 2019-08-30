@@ -14,7 +14,7 @@
     <RootNamespace>dictionaryAttack</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>./inputs/samplePasswordFile.lst ./outputs</CommandLineArguments>
+    <CommandLineArguments>./inputs/ntlmPasswordFile.lst ./outputs</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
