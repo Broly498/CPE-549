@@ -70,5 +70,10 @@ with open(shadowFile, 'r') as file:
             #Extract password contents
             shadowEntry = line.splitlines()[0].split(':')
             hashInformation = shadowEntry[1].split('$')
+            salt = '$' + hashInformation[1] + '$' + hashInformation[2] + '$'
+
+            #Hash every item in the dictionary
+            for item in dictionaryEntries:
+                hash = crypt.crypt(item, salt)
 
 print("Dictionary Attack Program Concluded...")
