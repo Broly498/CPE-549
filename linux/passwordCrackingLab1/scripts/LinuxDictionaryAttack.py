@@ -24,7 +24,7 @@
    Arg2: <outputDirectory>
 '''
 
-#import crypt
+import crypt
 import os
 import sys
 
