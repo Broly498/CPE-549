@@ -24,7 +24,7 @@
    Arg2: <outputDirectory>
 '''
 
-import crypt
+#import crypt
 import os
 import sys
 
@@ -69,8 +69,9 @@ with open(shadowFile, 'r') as file:
         if not line.startswith('#'):
             #Extract password contents
             shadowEntry = line.splitlines()[0].split(':')
-            hashInformation = shadowEntry[1].split('$')
-            salt = '$' + hashInformation[1] + '$' + hashInformation[2] + '$'
+            shadowInformation = shadowEntry[1].split('$')
+            hash = shadowInformation[3]
+            salt = '$' + shadowInformation[1] + '$' + shadowInformation[2] + '$'
 
             #Hash every item in the dictionary
             for item in dictionaryEntries:
