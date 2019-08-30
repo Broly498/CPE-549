@@ -24,7 +24,8 @@
    Arg2: <outputDirectory>
 '''
 
-#import crypt
+import hmac
+import crypt
 import os
 import sys
 
@@ -70,11 +71,24 @@ with open(shadowFile, 'r') as file:
             #Extract password contents
             shadowEntry = line.splitlines()[0].split(':')
             shadowInformation = shadowEntry[1].split('$')
-            hash = shadowInformation[3]
-            salt = '$' + shadowInformation[1] + '$' + shadowInformation[2] + '$'
+            shadowHash = shadowInformation[3]
+            shadowSalt = '$' + shadowInformation[1] + '$' + shadowInformation[2] + '$'
+
+            matchFound = False
 
             #Hash every item in the dictionary
             for item in dictionaryEntries:
-                hash = crypt.crypt(item, salt)
+                hashInformation = crypt.crypt(item, shadowSalt)
+                computedHash = hashInformation.split('$')[3]
+                
+                #Compare hashes and see if a password match was found
+                if hmac.compare_digest(shadowHash, computedHash):
+                    matchFound = True
+                    break
+
+            if matchFound:
+                print(item )
+            else:
+                print("No match found")
 
 print("Dictionary Attack Program Concluded...")
