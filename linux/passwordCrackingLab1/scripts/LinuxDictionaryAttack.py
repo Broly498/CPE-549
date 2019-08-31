@@ -1,7 +1,7 @@
 '''The dictionary attack program is only supported on Linux platforms.
    This program wil perform a dictionary attack on a set of linux user passwords
    through the use of a dictionary file containing a list of commonly used passwords.
-   The program will parse a condensed shadow file containing hashed passwords.
+   The program will parse a condensed shadow file containing hashed passwords and attempt a brute-force entry.
    Each password entry should be new-line delimited (\n).
    The shadow file may also contain comments which are denoted by a pound sign (#).
    
@@ -70,25 +70,25 @@ with open(shadowFile, 'r') as file:
             #Extract password contents
             shadowEntry = line.splitlines()[0].split(':')
             shadowInformation = shadowEntry[1].split('$')
-            shadowUser = shadowEntry[0]
-            shadowSalt = shadowEntry[1]
-            shadowHash = shadowInformation[3]
+            username = shadowEntry[0]
+            salt = shadowEntry[1]
+            hashedPassword = shadowInformation[3]
 
             matchFound = False
 
             #Hash every item in the dictionary
             for item in dictionaryEntries:
-                hashInformation = crypt.crypt(item, shadowSalt)
+                hashInformation = crypt.crypt(item, salt)
                 computedHash = hashInformation.split('$')[3]
                 
                 #Compare hashes and see if a password match was found
-                if hmac.compare_digest(shadowHash, computedHash):
+                if hmac.compare_digest(hashedPassword, computedHash):
                     matchFound = True
                     break
 
             if matchFound:
-                print("Match found for userid [" + shadowUser + "]. Password = [" + item + "]")
+                print("Match found for userid [" + username + "]. Password = [" + item + "]")
             else:
-                print("No match was found for userid [" + shadowUser + "].")
+                print("No match was found for userid [" + username + "].")
 
 print("Dictionary Attack Program Concluded...")
