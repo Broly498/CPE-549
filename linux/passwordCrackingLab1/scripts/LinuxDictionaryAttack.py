@@ -1,33 +1,32 @@
-'''This program wil perform a dictionary attack on a set of
-   passwords through the use of a text file containing a list
-   of plain-text passwords.
-   
-   The program is designed designed to parse list files containing collections of plain-text passwords.
-   Passwords that are contained inside of the list file should be new-line delimited (\n).
-   The list file may also contain comments which are denoted by a pound sign (#).
+'''The dictionary attack program is only supported on Linux platforms.
+   This program wil perform a dictionary attack on a set of linux user passwords
+   through the use of a dictionary file containing a list of commonly used passwords.
+   The program will parse a condensed shadow file containing hashed passwords.
+   Each password entry should be new-line delimited (\n).
+   The shadow file may also contain comments which are denoted by a pound sign (#).
    
    ------------------------------------------------------------
-   ------------------- Begin sampleFile.lst -------------------
+   ------------------- Begin sampleShadowFile -----------------
    ------------------------------------------------------------
    #comment1\n
    #comment2\n
    #comment3\n
-   password1\n
-   password2\n
-   password3\n
+   username1:$digit$salt1$hash1:last:minimum:maximum:warn:inactive:expire:::\n
+   username2:$digit$salt2$hash2:last:minimum:maximum:warn:inactive:expire:::\n
+   username3:$digit$salt3$hash3:last:minimum:maximum:warn:inactive:expire:::\n
    ------------------------------------------------------------
-   -------------------- End sampleFile.lst --------------------
+   -------------------- End sampleShadowFile ------------------
    ------------------------------------------------------------
 
    Expected Command-Line Arguments:
-   Arg1: <inputFile>
-   Arg2: <outputDirectory>
+   Arg1: <shadowFile>
+   Arg2: <dictionaryFile>
 '''
 
 import hmac
-import crypt
 import os
 import sys
+import crypt
 
 print("Beginning Dictionary Attack Program...")
 
@@ -72,8 +71,8 @@ with open(shadowFile, 'r') as file:
             shadowEntry = line.splitlines()[0].split(':')
             shadowInformation = shadowEntry[1].split('$')
             shadowUser = shadowEntry[0]
+            shadowSalt = shadowEntry[1]
             shadowHash = shadowInformation[3]
-            shadowSalt = '$' + shadowInformation[1] + '$' + shadowInformation[2] + '$'
 
             matchFound = False
 
