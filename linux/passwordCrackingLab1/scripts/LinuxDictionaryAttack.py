@@ -87,8 +87,8 @@ with open(shadowFile, 'r') as file:
                     break
 
             if matchFound:
-                print("Match found for userid [" + username + "]. Password = [" + item + "]")
+                print("Match found for userid " + username + ". Password = " + item)
             else:
-                print("No match was found for userid [" + username + "].")
+                print("No match was found for userid " + username)
 
 print("Dictionary Attack Program Concluded...")
