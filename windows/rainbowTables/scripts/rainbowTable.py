@@ -41,7 +41,6 @@ if not os.path.exists(inputFile):
     sys.exit("Input File Was Not Specified Argv 1: " + inputFile)
 
 passwordDictionary = {}
-hashObject = hashlib.new('md4')
 
 #Open new context and open wordList File
 with open(inputFile, 'r') as file:
@@ -52,6 +51,7 @@ with open(inputFile, 'r') as file:
             plainTextPassword = line.strip()
 
             #Create NTLM password
+            hashObject = hashlib.new('md4')
             hashObject.update(plainTextPassword.encode('utf_16_le'))
             ntlmPassword = hashObject.hexdigest()
             passwordDictionary[ntlmPassword] = plainTextPassword
