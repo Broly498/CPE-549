@@ -5,12 +5,12 @@
     <ProjectGuid>f1f3c1d5-5900-42d4-97a5-70247b56dde1</ProjectGuid>
     <ProjectHome>
     </ProjectHome>
-    <StartupFile>./scripts/ntlmHashTable.py</StartupFile>
+    <StartupFile>scripts\rainbowTable.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>NTLM_Hashing</Name>
+    <Name>RainbowTables</Name>
     <RootNamespace>dictionaryAttack</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
@@ -25,7 +25,7 @@
     <Folder Include="scripts\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="scripts\ntlmHashTable.py" />
+    <Compile Include="scripts\rainbowTable.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
