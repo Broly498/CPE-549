@@ -1,0 +1,6 @@
+Password: hello
+Key: abc
+IV: 123
+
+AES-128-ECB:
+ * Does not use IV.
