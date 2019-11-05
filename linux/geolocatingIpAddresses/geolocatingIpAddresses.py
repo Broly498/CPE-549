@@ -2,12 +2,12 @@ import os
 import sys
 import pygeoip
 
-geoIpFile = "./inputs/GeoIp.dat"
+geoIpFile = "./inputs/GeoIP.dat"
 loginFile = "./inputs/logins.txt"
 
 #Validate IP file
 if not os.path.exists(geoIpFile):
-    sys.exit("IP File Does Not Exist: " + ipFile)
+    sys.exit("IP File Does Not Exist: " + geoIpFile)
 
 #Validate login file
 if not os.path.exists(loginFile):
