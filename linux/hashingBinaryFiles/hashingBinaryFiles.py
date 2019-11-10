@@ -18,4 +18,4 @@ with open(binaryFile, 'rb') as file:
     for line in file:
         hashObject.update(line)
 
-print("%s MD5 hash = %s" % (binaryFile, hashObject.hexdigest()))
+print("%s: MD5 hash = %s" % (binaryFile, hashObject.hexdigest()))
