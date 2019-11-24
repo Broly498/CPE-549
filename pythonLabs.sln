@@ -11,6 +11,8 @@ Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "geolocatingIpAddresses", "l
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "hashingBinaryFiles", "linux\hashingBinaryFiles\hashingBinaryFiles.pyproj", "{79A890FA-1FD4-46A3-AD10-54B1137D9360}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PortScanDetectionAndDiscrimination", "linux\PortScanDetectionAndDiscrimination\PortScanDetectionAndDiscrimination.pyproj", "{75334D12-39BB-46AE-8A35-80464C90CFAC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,8 @@ Global
 		{F544FB5C-28AC-47CE-A7CD-0820BE3A97F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{79A890FA-1FD4-46A3-AD10-54B1137D9360}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{79A890FA-1FD4-46A3-AD10-54B1137D9360}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75334D12-39BB-46AE-8A35-80464C90CFAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75334D12-39BB-46AE-8A35-80464C90CFAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
