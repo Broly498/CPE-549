@@ -27,112 +27,240 @@ inputFile = parsedArguments[1]
 if not os.path.exists(inputFile):
     sys.exit("Input file was not found: " + inputFile)
 
-#Open Input File and create PCAP object.
-fileObject = open(inputFile, 'rb')
-
 #Open new context and parse PCAP file
-with open(inputFile, 'rb') as file:
+with open(inputFile, 'rb') as fileObject:
     pcapObject = dpkt.pcap.Reader(fileObject)
 
-tcpPackets = {}
-udpPackets = {}
-nullScanPackets = {}
-xmasScanPackets = {}
+    tcpPacketsByTimeStamp = {}
+    udpPacketsByTimeStamp = {}
 
-#Extract Ethernet Packets
-for ts, buffer in pcapObject:
-    ethernetPacket = dpkt.ethernet.Ethernet(buffer)
+    nullScanDestinationPorts = []
+    xmasScanDestinationPorts = []
+    udpScanDestinationPorts = []
+    connectScanDestinationPorts = []
+    halfOpenScanDestinationPorts = []
 
-    #Extract IP Packets
-    if ethernetPacket.type == dpkt.ethernet.ETH_TYPE_IP:
+    #Extract Ethernet Packets
+    for ts, buffer in pcapObject:
+        ethernetPacket = dpkt.ethernet.Ethernet(buffer)
 
-        #Extrackt IP Packet Information
-        ipPacket = ethernetPacket.data
+        #Extract IP Packets
+        if ethernetPacket.type == dpkt.ethernet.ETH_TYPE_IP:
+            ipPacket = ethernetPacket.data
 
-        #Extract UDP Packets For UDP Scan Detection
-        if ipPacket.p == dpkt.ip.IP_PROTO_UDP:
-            udpPackets[ts] = ipPacket
+            #Extract UDP Packets
+            if ipPacket.p == dpkt.ip.IP_PROTO_UDP:
+                udpPacketsByTimeStamp[ts] = ipPacket
 
-        #Extrackt TCP Packets For Xmas Scan, Null Scan, Half-Open Scan, and Open Scan Scan Detection
-        if ipPacket.p == dpkt.ip.IP_PROTO_TCP:
-            tcpPackets[ts] = ipPacket
+            #Extract TCP Packets
+            if ipPacket.p == dpkt.ip.IP_PROTO_TCP:
+                tcpPacketsByTimeStamp[ts] = ipPacket
 
-            #Detect Mallicious Null Scan Packets
-            if (ipPacket.data.flags == 0):
-                nullScanPackets[ts] = ipPacket
-            #Detect Mallicious Xmas Scan Packets
-            elif ((ipPacket.data.flags & dpkt.tcp.TH_FIN) != 0 and (ipPacket.data.flags & dpkt.tcp.TH_URG) != 0 and (ipPacket.data.flags & dpkt.tcp.TH_PUSH) != 0):
-                xmasScanPackets[ts] = ipPacket
+                packetData = ipPacket.data
+                destinationPort = packetData.dport
 
-nullScanDestinationPorts = []
+                #Flag the Destination Port of the Mallicious Null Scan Source
+                if (packetData.flags == 0) and (destinationPort not in nullScanDestinationPorts):
+                    nullScanDestinationPorts.append(destinationPort)
 
-#Extract Null Scan Destination Ports
-for key in nullScanPackets:
-    packetData = nullScanPackets[key].data
+                #Flag the Destination Port of the Mallicious Xmas Scan Source
+                elif ((packetData.flags & dpkt.tcp.TH_FIN) != 0) and \
+                     ((packetData.flags & dpkt.tcp.TH_URG) != 0) and \
+                     ((packetData.flags & dpkt.tcp.TH_PUSH) != 0) and \
+                     (destinationPort not in xmasScanDestinationPorts):
+                    xmasScanDestinationPorts.append(destinationPort)
 
-    #Extract Destination Port
-    destinationPort = packetData.dport
-    nullScanDestinationPorts.append(destinationPort)
+    #Define Scan Heuristic for the Following Scans: UDP, Connect, Half-Open
 
-#Find Unique Ports That Were Scanned During the Null Scan
-uniqueNullScanDestinationPorts = list(set(nullScanDestinationPorts))
+    scanPacketCount = 10
+    scanTimeWindow_s = 1.
+    scanThresholdFrequency_Hz = scanPacketCount / scanTimeWindow_s
 
-xmasScanDestinationPorts = []
+    #Check if any UDP Packets Are Present
+    if udpPacketsByTimeStamp:
+        timer_s = 0.
 
-#Extract Xmas Scan Destination Ports
-for key in xmasScanPackets:
-    packetData = xmasScanPackets[key].data
+        #The Start Time is that of the First UDP Packet
+        startTime_s = list(udpPacketsByTimeStamp.keys())[0]
 
-    #Extract Destination Port
-    destinationPort = packetData.dport
-    xmasScanDestinationPorts.append(destinationPort)
+        udpPacketCountBySource = {}
 
-#Find Unique Ports That Were Scanned During the Xmas Scan
-uniqueXmasScanDestinationPorts = list(set(xmasScanDestinationPorts))
+        udpScanSources = []
 
-udpScanPackets = {}
+        #Find Potential UDP Scan Sources
+        for currentTime_s in udpPacketsByTimeStamp:
+            #Update the Timer
+            timer_s = currentTime_s - startTime_s
 
-if bool(udpPackets):
-    timer_s = 0.
-    startTime_s = list(udpPackets.keys())[0]
-
-    maxUdpPacketsPerTimeWindow = 5
-    udpPacketTimeWindow_s = 10.
-
-    udpCountBySource = {}
-
-    for key in udpPackets:
-        currentTime_s = key
-
-        timer_s = currentTime_s - startTime_s
-
-        packet = udpPackets[key]
-        source = packet.src
+            udpPacket = udpPacketsByTimeStamp[currentTime_s]
+            source = udpPacket.src
     
-        if source not in udpCountBySource:
-            udpCountBySource[source] = 0
+            #Ensure that Every Source Count Starts at Zero
+            if source not in udpPacketCountBySource:
+                udpPacketCountBySource[source] = 0
 
-        if udpCountBySource[source] > maxUdpPacketsPerTimeWindow and timer_s < udpPacketTimeWindow_s:
-             udpScanPackets[key] = packet
-        elif timer_s > udpPacketTimeWindow_s:
-            timer_s = 0
-            udpCountBySource[source] = 0
-        else:
-            udpCountBySource[source] += 1
+            #Update the Packet Frequency
+            udpFrequency_Hz = udpPacketCountBySource[source] / scanTimeWindow_s
 
-udpScanDestinationPorts = []
+            #Flag the Source if the Scan Threshold Has Been Exceeded
+            if (udpFrequency_Hz > scanThresholdFrequency_Hz) and (source not in udpScanSources):
+                udpScanSources.append(source)
+            #The Scan Time Window Has Been Exceeded, Reset the Timer and Source Count
+            elif timer_s > scanTimeWindow_s:
+                timer_s = 0.
+                udpPacketCountBySource[source] = 0
+            #The Time Window and Scan Threshold Has Not Been Exceeded, Increment the Source Count
+            else:
+                udpPacketCountBySource[source] += 1
 
-#Extract UDP Scan Destination Ports
-for key in udpScanPackets:
-    packetData = udpScanPackets[key].data
+        #Find Unique UDP Scan Port Destinations
+        for currentTime_s in udpPacketsByTimeStamp:
+            udpPacket = udpPacketsByTimeStamp[currentTime_s]
+            source = udpPacket.src
 
-    #Extract Destination Port
-    destinationPort = packetData.dport
-    udpScanDestinationPorts.append(destinationPort)
+            packetData = udpPacket.data
+            destinationPort = packetData.dport
 
-#Find Unique Ports That Were Scanned During the UDP Scan
-uniqueUdpScanDestinationPorts = list(set(udpScanDestinationPorts))
+            #Flag the Destination Port
+            if (source in udpScanSources) and (destinationPort not in udpScanDestinationPorts):
+                udpScanDestinationPorts.append(destinationPort)
 
-print("Null: %d" % len(uniqueNullScanDestinationPorts))
-print("XMAS: %d" % len(uniqueXmasScanDestinationPorts))
-print("UDP: %d" % len(uniqueUdpScanDestinationPorts))
+    #Check if any TCP Packets Are Present
+    if tcpPacketsByTimeStamp:
+        timer_s = 0.
+
+        #The Start Time is that of the First TCP Packet
+        startTime_s = list(tcpPacketsByTimeStamp.keys())[0]
+
+        tcpSynPacketCountBySource = {}
+
+        tcpSynPacketSources = []
+        tcpSynPacketPortDestinations = []
+
+        #Find Potential Scan Sources (Syn Flag): Connect and Half-Open
+        for currentTime_s in tcpPacketsByTimeStamp:
+            #Update the Timer
+            timer_s = currentTime_s - startTime_s
+
+            tcpPacket = tcpPacketsByTimeStamp[currentTime_s]
+            packetData = tcpPacket.data
+
+            source = tcpPacket.src
+            portDestination = packetData.dport
+    
+            #Ensure that Every Source Count Starts at Zero
+            if source not in tcpSynPacketCountBySource:
+                tcpSynPacketCountBySource[source] = 0
+
+            #Update the Packet Frequency
+            tcpFrequency_Hz = tcpSynPacketCountBySource[source] / scanTimeWindow_s
+
+            #Flag the Source and Destination Port if the Scan Threshold Has Been Exceeded
+            if tcpFrequency_Hz > scanThresholdFrequency_Hz:
+                if source not in tcpSynPacketSources:
+                    tcpSynPacketSources.append(source)
+
+                if portDestination not in tcpSynPacketPortDestinations:
+                    tcpSynPacketPortDestinations.append(portDestination)
+            #The Scan Time Window Has Been Exceeded, Reset the Timer and Source Count
+            elif timer_s > scanTimeWindow_s:
+                timer_s = 0.
+                tcpSynPacketCountBySource[source] = 0
+            #The Packet Contains a Syn Flag, Increment the Source Count
+            elif packetData.flags == dpkt.tcp.TH_SYN:
+                tcpSynPacketCountBySource[source] += 1
+        
+        tcpSynAckPacketPortSources = []
+
+        #Find Potential Scan Responses (Syn/Ack Flags): Connect and Half-Open
+        for currentTime_s in tcpPacketsByTimeStamp:
+            packet = tcpPacketsByTimeStamp[currentTime_s]
+            packetData = packet.data
+
+            sourcePort = packetData.sport
+            destination = packet.dst
+
+            #Flag the Source and Destination if the Packet Contains Syn/Ack Flags
+            #and it is Responding to a Potential Scan Source
+            if ((packetData.flags & dpkt.tcp.TH_SYN) != 0) and \
+               ((packetData.flags & dpkt.tcp.TH_ACK) != 0) and \
+               (destination in tcpSynPacketSources) and \
+               (sourcePort in tcpSynPacketPortDestinations) and \
+               (sourcePort not in tcpSynAckPacketPortSources):
+                tcpSynAckPacketPortSources.append(sourcePort)
+
+        tcpAckPacketPortSources = []
+        tcpRstPacketPortSources = []
+
+        #Find Potential Scan Completions (Ack, Rst Flags): Connect and Half-Open
+        for currentTime_s in tcpPacketsByTimeStamp:
+            packet = tcpPacketsByTimeStamp[currentTime_s]
+            packetData = packet.data
+
+            source = packet.src
+            sourcePort = packetData.sport
+            destinationPort = packetData.dport
+
+            #Check if the Source and Destination Have Been
+            #Part of a Potential Half-Open or Connect Scan Handshake
+            if (destinationPort in tcpSynPacketPortDestinations) and \
+               (destinationPort in tcpSynAckPacketPortSources) and \
+               (source in tcpSynPacketSources):
+
+                #Flag the Source as a Connect Scan if it Contains an Ack Flag 
+                if (packetData.flags == 16) and (sourcePort not in tcpAckPacketPortSources):
+                    tcpAckPacketPortSources.append(sourcePort)
+                #Flag the Source as a Half-Open Scan if it Contains a Rst Flag
+                if packetData.flags == 4 and (sourcePort not in tcpRstPacketPortSources):
+                    tcpRstPacketPortSources.append(sourcePort)
+
+        halfOpenScanSources = []
+        connectScanSources = []
+
+        #Find Confirmed Scan Sources: Connect and Half-Open 
+        for currentTime_s in tcpPacketsByTimeStamp:
+            packet = tcpPacketsByTimeStamp[currentTime_s]
+            packetData = packet.data
+
+            source = packet.src
+            sourcePort = packetData.sport
+            destinationPort = packetData.dport
+
+            #Check if the Source and Destination Port Has Been Flagged: Connect and Half-Open
+            if (source in tcpSynPacketSources) and \
+               (destinationPort in tcpSynPacketPortDestinations) and \
+               (destinationPort in tcpSynAckPacketPortSources):
+
+                #Flag the Source as a Half-Open Scan
+                if (sourcePort in tcpRstPacketPortSources) and \
+                    (source not in halfOpenScanSources):
+                    halfOpenScanSources.append(source)
+
+                #Flag the Source as a Connect Scan
+                if (sourcePort in tcpAckPacketPortSources) and \
+                    (source not in connectScanSources):
+                    connectScanSources.append(source)
+
+        #Find Unique Scan Port Destinations: Connect and Half-Open
+        for currentTime_s in tcpPacketsByTimeStamp:
+            packet = tcpPacketsByTimeStamp[currentTime_s]
+            packetData = packet.data
+
+            source = packet.src
+            destinationPort = packetData.dport
+
+            #Flag the Half-Open Scan Destination Port
+            if (source in halfOpenScanSources) and \
+                (destinationPort not in halfOpenScanDestinationPorts):
+                halfOpenScanDestinationPorts.append(destinationPort)
+
+            #Flag the Connect Scan Destination Port
+            if (source in connectScanSources) and \
+                (destinationPort not in connectScanDestinationPorts):
+                connectScanDestinationPorts.append(destinationPort)
+
+    print("Null: %d" % len(nullScanDestinationPorts))
+    print("XMAS: %d" % len(xmasScanDestinationPorts))
+    print("UDP: %d" % len(udpScanDestinationPorts))
+    print("Half-open: %d" % len(halfOpenScanDestinationPorts))
+    print("Connect: %d" % len(connectScanDestinationPorts))

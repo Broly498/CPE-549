@@ -12,7 +12,7 @@
     <Name>PortScanDetectionAndDiscrimination</Name>
     <RootNamespace>PortScanDetectionAndDiscrimination</RootNamespace>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
-    <CommandLineArguments>-i ./inputs/udp_scan.pcap</CommandLineArguments>
+    <CommandLineArguments>-i ./inputs/xmas_scan.pcap</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
