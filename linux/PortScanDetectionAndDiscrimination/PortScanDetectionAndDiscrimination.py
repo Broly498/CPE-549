@@ -94,24 +94,26 @@ with open(inputFile, 'rb') as fileObject:
 
             udpPacket = udpPacketsByTimeStamp[currentTime_s]
             source = udpPacket.src
-    
-            #Ensure that Every Source Count Starts at Zero
-            if source not in udpPacketCountBySource:
-                udpPacketCountBySource[source] = 0
 
-            #Update the Packet Frequency
-            udpFrequency_Hz = udpPacketCountBySource[source] / scanTimeWindow_s
+            #Only Look at Packets that Contain Only the Header Information
+            if len(udpPacket.data) == 8:
+                #Ensure that Every Source Count Starts at Zero
+                if source not in udpPacketCountBySource:
+                    udpPacketCountBySource[source] = 0
 
-            #Flag the Source if the Scan Threshold Has Been Exceeded
-            if (udpFrequency_Hz > scanThresholdFrequency_Hz) and (source not in udpScanSources):
-                udpScanSources.append(source)
-            #The Scan Time Window Has Been Exceeded, Reset the Timer and Source Count
-            elif timer_s > scanTimeWindow_s:
-                timer_s = 0.
-                udpPacketCountBySource[source] = 0
-            #The Time Window and Scan Threshold Has Not Been Exceeded, Increment the Source Count
-            else:
-                udpPacketCountBySource[source] += 1
+                #Update the Packet Frequency
+                udpFrequency_Hz = udpPacketCountBySource[source] / scanTimeWindow_s
+
+                #Flag the Source if the Scan Threshold Has Been Exceeded
+                if (udpFrequency_Hz > scanThresholdFrequency_Hz) and (source not in udpScanSources):
+                    udpScanSources.append(source)
+                #The Scan Time Window Has Been Exceeded, Reset the Timer and Source Count
+                elif timer_s > scanTimeWindow_s:
+                    timer_s = 0.
+                    udpPacketCountBySource[source] = 0
+                #The Time Window and Scan Threshold Has Not Been Exceeded, Increment the Source Count
+                else:
+                    udpPacketCountBySource[source] += 1
 
         #Find Unique UDP Scan Port Destinations
         for currentTime_s in udpPacketsByTimeStamp:
